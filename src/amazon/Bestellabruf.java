@@ -272,41 +272,48 @@ public class Bestellabruf implements Runnable{
 		return out.replace("\t", "").replace("\n", "").replace("\r", "").trim();
 	}
 	protected  void analyse(Page login) {
+		System.out.println(login.getDocument().getBody().getOuterHTML());
+		System.out.println(login.getDocument().getBody().getInnerHTML());
 		Element selectEle = login.getDocument().query("select[name=\"orderFilter\"]").get();
 		Select select = new Select(selectEle);
 		for (int i = 0; i < select.getOptions().size(); i++) {
 			// set selectEle and Selct new because we might be on an new page
-			selectEle = login.getDocument().query("select[name=\"orderFilter\"]").get();
-			select = new Select(selectEle);
-			Option opt = select.getOption(i);
-			if (opt.getElement().getAttribute("value").get().startsWith("year-")) {
-				System.out.println("Setting to " + opt.getElement().getAttribute("value"));
-				setStatus("Jahr: " + opt.getElement().getText().get());
-				select.clearSelection();
-				select.setSelectedIndex(i);
-				select.change();
-				cfg.waitFinish();
-				int page = 1;
-				while (true) {
-					setStatus("Jahr: " + opt.getElement().getText().get() + " Seite "+ page);
-					System.out.println(opt.getElement().getText() + "/" + page);
-					extract2(login);
-					page++;
-					Optional<Element> next = login.getDocument().query("li[class=\"a-last\"]");
-					if (next.isPresent()) {
-						Optional<Element> ahref = next.get().query("a");
-						if (ahref.isPresent()) {
-							System.out.println("Klick auf Next");
-							ahref.get().click();
-							cfg.waitFinish();
-							continue;
+			Optional<Element> selectEleOpt = login.getDocument().query("select[name=\"orderFilter\"]");
+			if (selectEleOpt.isPresent()) {
+				selectEle = selectEleOpt.get();
+				select = new Select(selectEle);
+				Option opt = select.getOption(i);
+				if (opt.getElement().getAttribute("value").get().startsWith("year-")) {
+					System.out.println("Setting to " + opt.getElement().getAttribute("value"));
+					setStatus("Jahr: " + opt.getElement().getText().get());
+					select.clearSelection();
+					select.setSelectedIndex(i);
+					select.change();
+					cfg.waitFinish();
+					int page = 1;
+					while (true) {
+						setStatus("Jahr: " + opt.getElement().getText().get() + " Seite "+ page);
+						System.out.println(opt.getElement().getText() + "/" + page);
+						extract2(login);
+						page++;
+						Optional<Element> next = login.getDocument().query("li[class=\"a-last\"]");
+						if (next.isPresent()) {
+							Optional<Element> ahref = next.get().query("a");
+							if (ahref.isPresent()) {
+								System.out.println("Klick auf Next");
+								ahref.get().click();
+								cfg.waitFinish();
+								continue;
+							} else {
+								break;
+							}
 						} else {
 							break;
 						}
-					} else {
-						break;
 					}
 				}
+			} else {
+				// orderFilter not present
 			}
 		}
 	}
