@@ -25,21 +25,27 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+/**
+ * Bestellabruf, being an Amazon order.
+ *
+ */
 public class Bestellabruf implements Runnable{
 
 	protected  MyPageConfiguration cfg = MyPageConfiguration.instance();
+	protected Country country;
 	protected  String user;
 	protected  String pwd;
 	protected  ObservableList<Artikel> liste;
 	protected  SimpleStringProperty status;
-	
-	public Bestellabruf(String user, String pwd, SimpleStringProperty status) {
+
+	public Bestellabruf(Country country, String user, String pwd, SimpleStringProperty status) {
 		liste = FXCollections.observableArrayList();
+		this.country = country;
 		this.user = user;
 		this.pwd = pwd;
 		this.status = status;
 	}
-	
+
 	public ObservableList<Artikel> getListe() {
 		return liste;
 	}
@@ -49,7 +55,7 @@ public class Bestellabruf implements Runnable{
 		setStatus("Bitte warten...Web-Komponente wird gestartet");
 		BrowserEngine webKit = BrowserFactory.getWebKit();
 
-        Page login;
+		Page login;
 		login = login(webKit);
 		analyse(login);
 		setStatus("Fertig");
@@ -110,7 +116,7 @@ public class Bestellabruf implements Runnable{
 			
 		String url = get(articel, "a[class=\"a-link-normal\"]", "not found", true, 1, "href");
 		if (!"not found".equals(url)) {
-			url = "www.amazon.de" + url;
+			url = country.getDomain() + url;
 		}
 		Artikel artikel = new Artikel();
 		artikel.preis = preis;
@@ -307,7 +313,8 @@ public class Bestellabruf implements Runnable{
 
 	protected  Page login(BrowserEngine webKit) {
 		setStatus("Loginversuch...");
-		Page login = webKit.navigate("https://www.amazon.de/gp/css/order-history/ref=nav__gno_yam_yrdrs", cfg);
+		String url = String.format("https://%s/gp/css/order-history/ref=nav__gno_yam_yrdrs", country.getDomain());
+		Page login = webKit.navigate(url, cfg);
 		cfg.waitFinish();
 		login.show();
 		login.getDocument().query("input[id=\"ap_email\"]").get().setValue(user);

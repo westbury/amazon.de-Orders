@@ -1,5 +1,10 @@
 package amazon.data;
 
+/**
+ * An Artikel in the Bestellabruf.  Each Bestellabruf may have one of more
+ * Artikelen in it.  
+ *
+ */
 public class Artikel {
 	public String preis;
 	public String name;

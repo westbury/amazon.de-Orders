@@ -1,6 +1,7 @@
 package view;
 
 import amazon.Bestellabruf;
+import amazon.Country;
 import amazon.data.Artikel;
 import evntHandler.KeyEventHandlerTableview;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -15,11 +16,15 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ComboBox;
 import javafx.util.Callback;
 
 public class MainDialogController {
 	private Bestellabruf task = null;
 	
+    @FXML
+    private ComboBox<String> country;
+    
     @FXML
     private TextField user;
     
@@ -39,7 +44,19 @@ public class MainDialogController {
     	if (task != null) {
     		return;
     	}
-    	task = new Bestellabruf(user.getText(), pwd.getText(), status);
+    	
+    	String countryDomain = country.getSelectionModel().getSelectedItem();
+    	Country country = null;
+    	switch (countryDomain) {
+    	case "amazon.de":
+    		country = Country.DE;
+    		break;
+    	case "amazon.co.uk":
+    		country = Country.UK;
+    		break;
+    	}
+    	
+		task = new Bestellabruf(country, user.getText(), pwd.getText(), status);
     	tableview.setItems(task.getListe());
     	 (new Thread(task)).start();
     }

@@ -9,9 +9,12 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.collections.*?>
+<?import java.lang.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="view.MainDialogController">
    <top>
@@ -40,6 +43,22 @@
          <top>
             <VBox BorderPane.alignment="CENTER">
                <children>
+                  <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
+                     <children>
+                        <Label text="Country" />
+                        <ComboBox fx:id="country" >
+                          <items>
+       <FXCollections fx:factory="observableArrayList">
+      <String fx:value="amazon.de" />
+      <String fx:value="amazon.co.uk" />
+       </FXCollections>
+     </items>
+     </ComboBox>
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                  </HBox>
                   <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="10.0">
                      <children>
                         <Label text="Benutzername" />
