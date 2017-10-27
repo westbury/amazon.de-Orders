@@ -1,5 +1,10 @@
 package amazon.data;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import amazon.AddressLinePair;
+
 public class Bestellung {
 	
 	public Bestellung() {
@@ -12,4 +17,11 @@ public class Bestellung {
 	}
 	public String datum;
 	public String wert;
+	
+	public List<AddressLinePair> allAddressLines = new ArrayList<>();
+	public String cardType;
+	public String cardNumber;
+	public List<AddressLinePair> allSummaryLines = new ArrayList<>();
+	public List<AddressLinePair> allTransactionLines = new ArrayList<>();
+	
 }

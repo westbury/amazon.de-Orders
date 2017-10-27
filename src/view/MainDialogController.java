@@ -57,7 +57,7 @@ public class MainDialogController {
     	}
     	
 		task = new Bestellabruf(country, user.getText(), pwd.getText(), status);
-    	tableview.setItems(task.getListe());
+    	tableview.setItems(task.getArtikelliste());
     	 (new Thread(task)).start();
     }
     

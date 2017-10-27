@@ -2,7 +2,7 @@ package amazon.data;
 
 /**
  * An Artikel in the Bestellabruf.  Each Bestellabruf may have one of more
- * Artikelen in it.  
+ * Artikel in it.  
  *
  */
 public class Artikel {
