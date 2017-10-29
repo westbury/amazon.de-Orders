@@ -1,5 +1,8 @@
 package application;
 	
+import java.util.Locale;
+import java.util.ResourceBundle;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
@@ -14,6 +17,7 @@ public class Main extends Application {
 		try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(Main.class.getClassLoader().getResource("view/MainDialog.fxml"));
+            loader.setResources(ResourceBundle.getBundle("view.MainDialog"));
             BorderPane mainLayout = (BorderPane) loader.load();
 			Scene scene = new Scene(mainLayout,700,400);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());

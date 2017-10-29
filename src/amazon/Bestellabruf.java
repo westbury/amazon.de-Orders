@@ -35,15 +35,24 @@ public class Bestellabruf implements Runnable{
 	protected Country country;
 	protected  String user;
 	protected  String passwort;
+	protected boolean isDetailRequired;
+	
+	protected ObservableList<Bestellung> bestellungliste;
 	protected  ObservableList<Artikel> artikelliste;
 	protected  SimpleStringProperty status;
 
-	public Bestellabruf(Country country, String user, String passwort, SimpleStringProperty status) {
+	public Bestellabruf(Country country, String user, String passwort, boolean isDetailRequired, SimpleStringProperty status) {
+		bestellungliste = FXCollections.observableArrayList();
 		artikelliste = FXCollections.observableArrayList();
 		this.country = country;
 		this.user = user;
 		this.passwort = passwort;
+		this.isDetailRequired = isDetailRequired;
 		this.status = status;
+	}
+
+	public ObservableList<Bestellung> getBestellungliste() {
+		return bestellungliste;
 	}
 
 	public ObservableList<Artikel> getArtikelliste() {
@@ -95,85 +104,96 @@ public class Bestellabruf implements Runnable{
 	protected  void analyseOrder(Page login, Element order) {
 		System.out.println("===========================");
 		System.out.println("Found " + order.getChildren().size() + " Children.");
-		Bestellung rechnung = extractOrderHeader(order.getChildren().get(0));
-		System.out.println(rechnung);
+		Bestellung bestellung = extractOrderHeader(order.getChildren().get(0));
+		System.out.println(bestellung);
 		for (int i = 1; i < order.getChildren().size(); i++) {
 			System.out.println("-------------------------------------------------------------------------------------------------------------------" + "Part" + i);
-			analysePart(login, rechnung, order.getChildren().get(i));
+			analysePart(login, bestellung, order.getChildren().get(i));
 		}
-		
 		
 		// Now go into the detail
 		
-		System.out.println(order.toString());
+		if (isDetailRequired) {
+			List<Element> selectEleOpt = order.queryAll("a[class=\"a-link-normal\"]");
+			for (Element e : selectEleOpt) {
+				String description = e.getText().get().trim();
+				if (description.equals("Bestelldetails") || description.equals("Order Details")) {
+					Optional<String> link = e.getAttribute("href");
+
+					Page detailsPage = webKit.navigate("https://" + country.getDomain() + link.get(), cfg);
+					cfg.waitFinish();
+					extractDetailsPage(bestellung, detailsPage);
+					break;
+				}
+			}
+		}
 		
-		List<Element> selectEleOpt = order.queryAll("a[class=\"a-link-normal\"]");
-		for (Element e : selectEleOpt) {
-			if (e.getText().get().trim().equals("Order Details")) {
-				Optional<String> link = e.getAttribute("href");
-				
-				Page detailsPage = webKit.navigate("https://" + country.getDomain() + link.get(), cfg);
-				cfg.waitFinish();
-				Element detailsBody = detailsPage.getDocument().getBody();
-				System.out.println(detailsBody.getOuterHTML());
+		/*
+		 * Add to the list of all Bestellung. A Bestellung is the top level object.
+		 * Artikel are just child objects of a Bestellung object.
+		 */		
+		bestellungliste.add(bestellung);
+	}
 
-				// Get the delivery address lines
-				Optional<Element> divShipping = detailsBody.query("div[class=\"a-section a-spacing-none od-shipping-address-container\"]");
-				if (divShipping.isPresent()) {
-					List<Element> addressLines = divShipping.get().queryAll("li");
-					for (Element addressLine : addressLines) {
-						List<String> allClasses = addressLine.getClasses();
-						for (String eachClass : allClasses) {
-							if (eachClass.startsWith("displayAddress") && !eachClass.equals("displayAddressLI")) {
-								String addressLineDescription = eachClass.substring("displayAddress".length());
-								String addressLineText = addressLine.getText().get();
-								rechnung.allAddressLines.add(new AddressLinePair(addressLineDescription, addressLineText));
-							}
-						}
+	private void extractDetailsPage(Bestellung rechnung, Page detailsPage) {
+		Element detailsBody = detailsPage.getDocument().getBody();
+		System.out.println(detailsBody.getOuterHTML());
+
+		// Get the delivery address lines
+		Optional<Element> divShipping = detailsBody.query("div[class=\"a-section a-spacing-none od-shipping-address-container\"]");
+		if (divShipping.isPresent()) {
+			List<Element> addressLines = divShipping.get().queryAll("li");
+			for (Element addressLine : addressLines) {
+				List<String> allClasses = addressLine.getClasses();
+				for (String eachClass : allClasses) {
+					if (eachClass.startsWith("displayAddress") && !eachClass.equals("displayAddressLI")) {
+						String addressLineDescription = eachClass.substring("displayAddress".length());
+						String addressLineText = addressLine.getText().get();
+						rechnung.allAddressLines.add(new AddressLinePair(addressLineDescription, addressLineText));
 					}
 				}
-				
-				// Get all the h5 elements, first address, second payment, third summary
-				List<Element> headerFives = detailsBody.queryAll("h5");
-				
-				// Get the payment method
-				Element paymentDiv = headerFives.get(1).getParent().get();
+			}
+		}
+		
+		// Get all the h5 elements, first address, second payment, third summary
+		List<Element> headerFives = detailsBody.queryAll("h5");
+		
+		// Get the payment method
+		Element paymentDiv = headerFives.get(1).getParent().get();
 
-				Optional<Element> cardTypeElement = paymentDiv.query("img");
-				rechnung.cardType = cardTypeElement.get().getAttribute("alt").get();
+		Optional<Element> cardTypeElement = paymentDiv.query("img");
+		rechnung.cardType = cardTypeElement.get().getAttribute("alt").get();
 
-				Optional<Element> cardNumberElement = paymentDiv.query("span");
-				rechnung.cardNumber = cardNumberElement.get().getText().get().trim();
+		Optional<Element> cardNumberElement = paymentDiv.query("span");
+		rechnung.cardNumber = cardNumberElement.get().getText().get().trim();
 
-				// Get the order summary
-				Element summaryDiv = headerFives.get(2).getParent().get();
-				List<Element> summaryRows = summaryDiv.queryAll("div[class=\"a-row\"]");
-				for (Element summaryRow : summaryRows) {
-					List<Element> spans = summaryRow.queryAll("span");
-					String summaryDescription = spans.get(0).getText().get().trim();
-					String summaryAmount = spans.get(1).getText().get().trim();
+		// Get the order summary
+		Element summaryDiv = headerFives.get(2).getParent().get();
+		List<Element> summaryRows = summaryDiv.queryAll("div[class=\"a-row\"]");
+		for (Element summaryRow : summaryRows) {
+			List<Element> spans = summaryRow.queryAll("span");
+			String summaryDescription = spans.get(0).getText().get().trim();
+			String summaryAmount = spans.get(1).getText().get().trim();
 
-					if (summaryDescription.endsWith(":")) {
-						summaryDescription = summaryDescription.substring(0, summaryDescription.length() - 1);
-					}
-					rechnung.allSummaryLines.add(new AddressLinePair(summaryDescription, summaryAmount));
-				}
+			if (summaryDescription.endsWith(":")) {
+				summaryDescription = summaryDescription.substring(0, summaryDescription.length() - 1);
+			}
+			rechnung.allSummaryLines.add(new AddressLinePair(summaryDescription, summaryAmount));
+		}
 
-				// Get the transactions in the expander area (shown only when expanded)
-				// This gives the actual charge amounts which is important when the order was split into
-				// multiple shipments charged separately.
-				
-				Optional<Element> transactionsContent = detailsBody.query("div[class=\"a-expander-content a-expander-inline-content a-expander-inner aok-hidden\"]");
-				if (transactionsContent.isPresent()) {
-					List<Element> transactionRows = transactionsContent.get().queryAll("div[class=\"a-row\"]");
-					for (Element transactionRow : transactionRows) {
-						List<Element> spans = transactionRow.queryAll("span");
-						String tranactionInfo = spans.get(1).getText().get().trim();
-						String transactionAmount = spans.get(1).query("nobr").get().getText().get();
+		// Get the transactions in the expander area (shown only when expanded)
+		// This gives the actual charge amounts which is important when the order was split into
+		// multiple shipments charged separately.
+		
+		Optional<Element> transactionsContent = detailsBody.query("div[class=\"a-expander-content a-expander-inline-content a-expander-inner aok-hidden\"]");
+		if (transactionsContent.isPresent()) {
+			List<Element> transactionRows = transactionsContent.get().queryAll("div[class=\"a-row\"]");
+			for (Element transactionRow : transactionRows) {
+				List<Element> spans = transactionRow.queryAll("span");
+				String tranactionInfo = spans.get(1).getText().get().trim();
+				String transactionAmount = spans.get(1).query("nobr").get().getText().get();
 
-						rechnung.allTransactionLines.add(new AddressLinePair(tranactionInfo, transactionAmount));
-					}
-				}
+				rechnung.allTransactionLines.add(new AddressLinePair(tranactionInfo, transactionAmount));
 			}
 		}
 	}
@@ -204,7 +224,7 @@ public class Bestellabruf implements Runnable{
 
 	}
 
-	protected  void analysePart(Page login, Bestellung rechnung, Element element) {
+	protected  void analysePart(Page login, Bestellung bestellung, Element element) {
 		Zustellung zustellung;
 		for (Element c : element.getChildren()) {
 			zustellung = new Zustellung();
@@ -217,9 +237,10 @@ public class Bestellabruf implements Runnable{
 					System.out.println(cc.getTagName() + " | " + cc.getAttribute("class") + " | " + trim(cc.getText().get()));
 					//					print(cc, 0);
 					Artikel artikel = handleArticel(cc);
-					artikel.bestellung = rechnung;
+					artikel.bestellung = bestellung;
 					artikel.zustellung = zustellung;
 					getArtikelliste().add(artikel);
+					bestellung.getArtikelliste().add(artikel);
 					break;
 				default:
 					System.out.println(cc.getTagName() + " | " + cc.getAttribute("class") + " | " + trim(cc.getText().get()));
@@ -417,6 +438,5 @@ public class Bestellabruf implements Runnable{
 	protected  void setStatus(String string) {
 		Platform.runLater(() -> status.set(string));
 	}
-
 	
 }
