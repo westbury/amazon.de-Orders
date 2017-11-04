@@ -4,10 +4,10 @@
   <artifactId>de.open4me.amazon.de-Orders</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <build>
-    <sourceDirectory>src</sourceDirectory>
+    <sourceDirectory>src/main</sourceDirectory>
     <resources>
       <resource>
-        <directory>src</directory>
+        <directory>src/main</directory>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
@@ -39,19 +39,25 @@
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.5.1</version>
+        <version>3.7.0</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>9</source>
+          <target>9</target>
         </configuration>
       </plugin>
     </plugins>
   </build>
-  <dependencies>
-  	<dependency>
-  		<groupId>com.ui4j</groupId>
-  		<artifactId>ui4j-all</artifactId>
-  		<version>2.1.0</version>
-  	</dependency>
-  </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>com.ui4j</groupId>
+			<artifactId>ui4j-all</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.0.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 </project>

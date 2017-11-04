@@ -19,11 +19,11 @@ public class KeyEventHandlerTableview implements EventHandler<KeyEvent> {
 			if (!copyKeyCodeCompination.match(keyEvent) || !(keyEvent.getSource() instanceof TableView)) {
 				return;
 			}
-			copy2clipboard((TableView) keyEvent.getSource());
+			copy2clipboard((TableView<?>) keyEvent.getSource());
 			keyEvent.consume();
 		}
 
-		private void copy2clipboard(TableView source) {
+		private void copy2clipboard(TableView<?> source) {
 			StringBuilder out = new StringBuilder();
 
 			ObservableList<Integer> selectedCells = source.getSelectionModel().getSelectedIndices();
@@ -32,7 +32,7 @@ public class KeyEventHandlerTableview implements EventHandler<KeyEvent> {
 			
 			for (Integer row : selectedCells) {
 				for (int idx = 0; idx < columns; idx++) {
-					TableColumn tc = (TableColumn) source.getColumns().get(idx);
+					TableColumn<?,?> tc = (TableColumn<?,?>) source.getColumns().get(idx);
 					Object item = tc.getCellData((int) row);
 					out.append(item.toString());
 					if (idx != columns - 1) {

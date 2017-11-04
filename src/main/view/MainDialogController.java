@@ -1,5 +1,14 @@
 package view;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Properties;
+
 import amazon.Bestellabruf;
 import amazon.Country;
 import amazon.data.Artikel;
@@ -53,12 +62,52 @@ public class MainDialogController {
     private Label statuslabel;
     
     private SimpleStringProperty status = new SimpleStringProperty("");
+
+	private Properties properties;
+    
+    @FXML
+    private void initialize() {
+    	File propertiesFile = new File("amazon.properties");
+    	properties = new Properties();
+    	try (InputStream inputStream = new FileInputStream(propertiesFile)) {
+			properties.load(inputStream);
+		} catch (FileNotFoundException e) {
+			// This is a normal situation when starting with no
+			// properties file.
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+    	if (properties.containsKey("country")) {
+    		country.setValue((String)properties.get("country"));
+    	}
+    	if (properties.containsKey("username")) {
+        	user.setText((String)properties.get("username"));
+    	}
+
+    }
     
     @FXML
     private void runPressed(ActionEvent event) {
-    	if (task != null) {
-    		return;
-    	}
+
+		properties.put("country", country.getValue());
+    	properties.put("username", user.getText());
+
+    	File propertiesFile = new File("amazon.properties");
+    	try (OutputStream outputStream = new FileOutputStream(propertiesFile)) {
+			properties.store(outputStream, "Properties for the amazon.de-Orders example application");
+		} catch (IOException e) {
+			// Don't worry if we can't save.
+		}
+
+    	
+    	//    	if (task != null) {
+//    		return;
+//    	}
+    	
+    	// Temp
+//    	task = new Bestellabruf(null, null, null, false, status);
     	
     	String countryDomain = country.getSelectionModel().getSelectedItem();
     	Country country = null;
@@ -76,6 +125,25 @@ public class MainDialogController {
     	
     	TreeItem<AmazonTreeNode> root = new TreeItem<AmazonTreeNode>(new BestellabrufTreeNode(task));
     	root.setExpanded(true);
+    	 
+    	 
+//     	Bestellung bestellung1 = new Bestellung();
+//     	bestellung1.datum = "21 December 2016";
+//     	bestellung1.wert = "£9.98";
+// 		task.getBestellungliste().add(bestellung1);
+//     	
+//     	Bestellung bestellung2 = new Bestellung();
+//     	bestellung2.datum = "22 December 2016";
+//     	bestellung2.wert = "£92.98";
+//     	bestellung2.cardNumber = "**** 3872";
+//     	bestellung2.cardType = "Eurocard";
+// 		task.getBestellungliste().add(bestellung2);
+//     	
+// 		Artikel artikel2 = new Artikel();
+// 		artikel2.name = "Raspberry Pi";
+// 		artikel2.preis = "£30,00";
+//    	artikel2.bestellung = bestellung2;
+//    	bestellung2.getArtikelliste().add(artikel2);
 
     	for (Bestellung bestellung : task.getBestellungliste()) {
     		TreeItem<AmazonTreeNode> bestellungTreeItem = new TreeItem<AmazonTreeNode>(new BestellungTreeNode(bestellung));
@@ -113,9 +181,6 @@ public class MainDialogController {
     	orders.setShowRoot(false);
     	
     	 (new Thread(task)).start();
-    }
-    
-    public MainDialogController() {
     }
     
     public void set() {

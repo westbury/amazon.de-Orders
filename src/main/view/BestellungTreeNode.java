@@ -1,9 +1,6 @@
 package view;
 
-import amazon.data.Artikel;
 import amazon.data.Bestellung;
-import javafx.collections.ListChangeListener;
-import javafx.scene.control.TreeItem;
 
 public class BestellungTreeNode extends AmazonTreeNode {
 

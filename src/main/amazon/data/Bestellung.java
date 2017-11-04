@@ -4,10 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import amazon.AddressLinePair;
+import de.open4me.amazonorders.AmazonOrder;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class Bestellung {
+/**
+ * Bestellung, being an Amazon order.
+ *
+ */
+public class Bestellung implements AmazonOrder {
 	
 	public String datum;
 	public String wert;

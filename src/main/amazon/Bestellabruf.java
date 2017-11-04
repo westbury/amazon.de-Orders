@@ -1,7 +1,6 @@
 package amazon;
 
 import java.io.File;
-
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -26,7 +25,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 /**
- * Bestellabruf, being an Amazon order.
+ * Bestellabruf, being the class that retrieves Amazon orders.
  *
  */
 public class Bestellabruf implements Runnable{
@@ -90,6 +89,7 @@ public class Bestellabruf implements Runnable{
 	}
 
 	protected  void extract2(Page login) {
+		System.out.println(login.getDocument().getBody());
 		try {
 			List<Element> order = login.getDocument().queryAll("div[class=\"a-box-group a-spacing-base order\"]");
 			System.out.println("Found " + order.size() + " Orders on this page.");
@@ -278,7 +278,7 @@ public class Bestellabruf implements Runnable{
 				}
 				return l;
 			}
-			// Remove neseted divs 
+			// Remove nested divs 
 			if (c.getChildren().size() == 1) {
 				return unroll(c.getChildren().get(0));
 			}
